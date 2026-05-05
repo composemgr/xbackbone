@@ -47,8 +47,8 @@ See `docker-compose.yaml` for complete list of configurable options.
 
 ## 📂 Volumes
 
-- `./rootfs/config/xbackbone` - Data storage
-- `./rootfs/data/xbackbone` - Data storage
+- `./volumes/config/xbackbone` - Data storage
+- `./volumes/data/xbackbone` - Data storage
 
 ## 🔍 Logging
 
