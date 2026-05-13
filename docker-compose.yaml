@@ -27,7 +27,7 @@ services:
       HOSTNAME: ${BASE_HOST_NAME:-$HOSTNAME}
       PUID: ${SERVICE_USER:-1000}
       PGID: ${SERVICE_GROUP:-1000}
-      APP_NAME: ${APP_NAME:-XBackBone}
+      APP_NAME: ${APP_ORG_NAME:-XBackBone}
       URL: http://${BASE_HOST_NAME:-$HOSTNAME}:8103
     volumes:
       - ./volumes/config/xbackbone:/app/config
