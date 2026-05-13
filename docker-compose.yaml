@@ -25,13 +25,13 @@ services:
       TZ: ${TZ:-America/New_York}
       CONTAINER_NAME: xbackbone-app
       HOSTNAME: ${BASE_HOST_NAME:-$HOSTNAME}
-      PUID: ${SERVICE_USER:-1000}
-      PGID: ${SERVICE_GROUP:-1000}
       APP_NAME: ${APP_ORG_NAME:-XBackBone}
       URL: http://${BASE_HOST_NAME:-$HOSTNAME}:8103
     volumes:
       - ./volumes/config/xbackbone:/app/config
       - ./volumes/data/xbackbone:/app/storage
+      - ./volumes/data/xbackbone/database:/app/resources/database
+      - ./volumes/logs/xbackbone:/app/logs
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:80"]
       interval: 30s
