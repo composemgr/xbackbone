@@ -1,5 +1,6 @@
 # nginx proxy address - http://172.17.0.1:8103
 
+name: xbackbone
 x-logging: &default-logging
   driver: json-file
   options:
@@ -8,27 +9,32 @@ x-logging: &default-logging
 
 services:
   xbackbone:
-    image: xbackbone/xbackbone:latest
+    image: pe46dro/xbackbone-docker:latest
+    pull_policy: always
     container_name: xbackbone-app
-    restart: unless-stopped
+    hostname: ${BASE_HOST_NAME:-$HOSTNAME}
+    restart: always
     logging: *default-logging
     networks:
       - xbackbone
     ports:
-      - "8103:8103"
+      - "172.17.0.1:8103:80"
     environment:
       TZ: ${TZ:-America/New_York}
       PUID: ${SERVICE_USER:-1000}
       PGID: ${SERVICE_GROUP:-1000}
+      APP_NAME: ${APP_NAME:-XBackBone}
+      URL: http://${BASE_HOST_NAME:-$HOSTNAME}:8103
     volumes:
-      - ./volumes/config/xbackbone:/config
-      - ./volumes/data/xbackbone:/data
+      - ./volumes/config/xbackbone:/app/config
+      - ./volumes/data/xbackbone:/app/storage
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8103"]
+      test: ["CMD", "curl", "-f", "http://localhost:80"]
       interval: 30s
       timeout: 10s
       retries: 3
 
 networks:
   xbackbone:
+    name: xbackbone
     external: false
