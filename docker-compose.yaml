@@ -1,64 +1,43 @@
-# nginx proxy address - http://172.17.0.1:8103
+# nginx proxy address - http://172.17.0.1:64391
 
 name: xbackbone
 x-logging: &default-logging
-  driver: json-file
   options:
-    max-size: "5m"
-    max-file: "1"
+    max-size: '5m'
+    max-file: '1'
+  driver: json-file
 
 services:
-  xbackbone:
+  app:
     image: pe46dro/xbackbone-docker:latest
-    pull_policy: always
     container_name: xbackbone-app
+    domainname: ${BASE_DOMAIN_NAME:-example.com}
     hostname: ${BASE_HOST_NAME:-$HOSTNAME}
     restart: always
+    pull_policy: always
     logging: *default-logging
-    networks:
-      - xbackbone
-      - proxy
-      - cloudflare
-    ports:
-      - "172.17.0.1:8103:80"
     environment:
       TZ: ${TZ:-America/New_York}
       CONTAINER_NAME: xbackbone-app
       HOSTNAME: ${BASE_HOST_NAME:-$HOSTNAME}
       APP_NAME: ${APP_ORG_NAME:-XBackBone}
-      URL: http://${BASE_HOST_NAME:-$HOSTNAME}:8103
+      URL: http://${BASE_HOST_NAME:-$HOSTNAME}:${XBACKBONE_PORT:-64391}
+    ports:
+      - '172.17.0.1:64391:80'
     volumes:
-      - ./volumes/config/xbackbone:/app/config
-      - ./volumes/data/xbackbone:/app/storage
-      - ./volumes/data/xbackbone/database:/app/resources/database
-      - ./volumes/logs/xbackbone:/app/logs
+      - './volumes/config/xbackbone:/app/config:z'
+      - './volumes/data/xbackbone:/app/storage:z'
+      - './volumes/data/xbackbone/database:/app/resources/database:z'
+      - './volumes/logs/xbackbone:/app/logs:z'
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:80"]
+      test: ['CMD', 'curl', '-f', 'http://localhost:80']
       interval: 30s
       timeout: 10s
       retries: 3
-    labels:
-      - 'traefik.enable=true'
-      - 'cloudflare.enable=true'
-      - 'traefik.docker.network=proxy'
-      - 'cloudflare.service=http://xbackbone-app:80'
-      - 'cloudflare.hostname=xbackbone.${CLOUDFLARE_ZONE_NAME:-}'
-      - 'traefik.http.routers.xbackbone-app.entrypoints=http'
-      - 'traefik.http.routers.xbackbone-app-secure.tls=true'
-      - 'traefik.http.routers.xbackbone-app.rule=Host($(${BASE_HOST_NAME:-$HOSTNAME}))'
-      - 'traefik.http.middlewares.xbackbone-app-https-redirect.redirectscheme.scheme=https'
-      - 'traefik.http.routers.xbackbone-app.middlewares=xbackbone-app-https-redirect'
-      - 'traefik.http.routers.xbackbone-app-secure.entrypoints=https'
-      - 'traefik.http.routers.xbackbone-app-secure.rule=Host($(${BASE_HOST_NAME:-$HOSTNAME}))'
-      - 'traefik.http.routers.xbackbone-app-secure.tls.certresolver=cloudflare'
-      - 'traefik.http.routers.xbackbone-app-secure.service=xbackbone-app'
-      - 'traefik.http.services.xbackbone-app.loadbalancer.server.port=80'
+    networks:
+      - xbackbone
 
 networks:
   xbackbone:
     name: xbackbone
     external: false
-  proxy:
-    external: true
-  cloudflare:
-    external: true

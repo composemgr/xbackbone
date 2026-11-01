@@ -1,0 +1,54 @@
+name: xbackbone
+x-logging: &default-logging
+  options:
+    max-size: '5m'
+    max-file: '1'
+  driver: json-file
+
+services:
+  app:
+    image: pe46dro/xbackbone-docker:latest
+    container_name: xbackbone-app
+    domainname: ${BASE_DOMAIN_NAME:-example.com}
+    hostname: ${BASE_HOST_NAME:-$HOSTNAME}
+    restart: always
+    pull_policy: always
+    logging: *default-logging
+    environment:
+      TZ: ${TZ:-America/New_York}
+      CONTAINER_NAME: xbackbone-app
+      HOSTNAME: ${BASE_HOST_NAME:-$HOSTNAME}
+      APP_NAME: ${APP_ORG_NAME:-XBackBone}
+      URL: https://${BASE_HOST_NAME:-$HOSTNAME}
+    volumes:
+      - './volumes/config/xbackbone:/app/config:z'
+      - './volumes/data/xbackbone:/app/storage:z'
+      - './volumes/data/xbackbone/database:/app/resources/database:z'
+      - './volumes/logs/xbackbone:/app/logs:z'
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:80']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.docker.network=traefik'
+      - 'traefik.http.routers.xbackbone-app.entrypoints=http'
+      - 'traefik.http.routers.xbackbone-app.rule=Host(`${BASE_HOST_NAME:-$HOSTNAME}`)'
+      - 'traefik.http.routers.xbackbone-app.middlewares=xbackbone-app-https-redirect'
+      - 'traefik.http.middlewares.xbackbone-app-https-redirect.redirectscheme.scheme=https'
+      - 'traefik.http.routers.xbackbone-app-secure.entrypoints=https'
+      - 'traefik.http.routers.xbackbone-app-secure.rule=Host(`${BASE_HOST_NAME:-$HOSTNAME}`)'
+      - 'traefik.http.routers.xbackbone-app-secure.tls.certresolver=cloudflare'
+      - 'traefik.http.routers.xbackbone-app-secure.service=xbackbone-app'
+      - 'traefik.http.services.xbackbone-app.loadbalancer.server.port=80'
+    networks:
+      - xbackbone
+      - traefik
+
+networks:
+  xbackbone:
+    name: xbackbone
+    external: false
+  traefik:
+    external: true
